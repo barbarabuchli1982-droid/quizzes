@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz — Contextos com Porcentagem</title>
+<style>
+  :root {
+    --cyan:#00e5ff; --green:#39ff14; --bg:#0a0a0a; --card:#111;
+    --border:#1e1e1e; --text:#e0e0e0; --muted:#666;
+    --correct:#39ff14; --wrong:#ff1744;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:'Segoe UI',Arial,sans-serif;
+    min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:0 12px 40px}
+  #progress-wrap{width:100%;max-width:680px;height:5px;background:#1a1a1a;position:sticky;top:0;z-index:10}
+  #progress-bar{height:100%;width:0%;background:linear-gradient(90deg,var(--cyan),var(--green));transition:width .4s}
+  header{width:100%;max-width:680px;padding:18px 0 8px;display:flex;justify-content:space-between;align-items:center}
+  #quiz-title{font-size:13px;color:var(--muted);letter-spacing:.5px;text-transform:uppercase}
+  #counter{font-size:13px;color:var(--cyan);font-weight:bold}
+  #streak-badge{width:100%;max-width:680px;text-align:right;min-height:28px;margin-bottom:4px}
+  #streak-badge span{display:inline-block;background:#ff6d00;color:#fff;padding:3px 12px;border-radius:20px;
+    font-size:13px;font-weight:bold;animation:pop .3s ease}
+  @keyframes pop{0%{transform:scale(.7)}60%{transform:scale(1.2)}100%{transform:scale(1)}}
+  #section-label{width:100%;max-width:680px;font-size:11px;color:var(--cyan);letter-spacing:1px;
+    text-transform:uppercase;margin-bottom:6px}
+  .card{width:100%;max-width:680px;background:var(--card);border:1px solid var(--border);border-radius:14px;
+    padding:26px 24px 20px;margin-bottom:16px}
+  #question-label{font-size:12px;color:var(--muted);margin-bottom:10px}
+  #question-text{font-size:18px;line-height:1.7;color:var(--text);margin-bottom:18px}
+  .opt{width:100%;text-align:left;background:#181818;border:1.5px solid #2a2a2a;border-radius:10px;
+    padding:13px 16px;margin-bottom:10px;cursor:pointer;font-size:15px;color:var(--text);
+    transition:border-color .2s,background .2s;display:flex;align-items:center;gap:12px}
+  .opt:hover:not(:disabled){border-color:var(--cyan);background:#141c1c}
+  .opt .letter{width:26px;height:26px;border-radius:50%;border:1.5px solid #444;display:flex;
+    align-items:center;justify-content:center;font-size:13px;font-weight:bold;flex-shrink:0}
+  .opt.correct{border-color:var(--correct);background:#0a1f0a}
+  .opt.correct .letter{background:var(--correct);border-color:var(--correct);color:#000}
+  .opt.wrong{border-color:var(--wrong);background:#1f0a0a}
+  .opt.wrong .letter{background:var(--wrong);border-color:var(--wrong);color:#fff}
+  .opt:disabled{cursor:default}
+  #feedback{width:100%;max-width:680px;border-radius:10px;padding:14px 18px;margin-bottom:16px;
+    font-size:15px;line-height:1.6;display:none}
+  #feedback.show{display:block}
+  #feedback.ok{background:#0a1f0a;border:1px solid var(--correct);color:#b9f6b9}
+  #feedback.err{background:#1f0a0a;border:1px solid var(--wrong);color:#ffb3b3}
+  #nav{width:100%;max-width:680px;display:flex;gap:12px}
+  .btn{flex:1;padding:14px;border-radius:10px;border:none;font-size:16px;font-weight:bold;
+    cursor:pointer;transition:opacity .2s}
+  .btn:disabled{opacity:.35;cursor:default}
+  #btn-back{background:#1e1e1e;color:var(--text)}
+  #btn-next{background:linear-gradient(135deg,var(--cyan),#006080);color:#000}
+  #btn-next:hover:not(:disabled){opacity:.88}
+  #final{display:none;width:100%;max-width:680px;text-align:center;padding:30px 20px}
+  #medal{font-size:72px;margin-bottom:12px}
+  #final-title{font-size:28px;font-weight:bold;color:var(--cyan);margin-bottom:8px}
+  #final-sub{font-size:16px;color:var(--muted);margin-bottom:24px}
+  .stat-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:28px}
+  .stat{background:#111;border:1px solid #222;border-radius:12px;padding:14px 22px;min-width:130px}
+  .stat .val{font-size:30px;font-weight:bold;color:var(--cyan)}
+  .stat .lbl{font-size:12px;color:var(--muted);margin-top:4px}
+  #btn-replay{background:linear-gradient(135deg,var(--green),#006010);color:#000;border:none;
+    border-radius:10px;padding:15px 40px;font-size:18px;font-weight:bold;cursor:pointer}
+  canvas{position:fixed;top:0;left:0;pointer-events:none;z-index:999}
+</style>
+</head>
+<body>
+<div id="progress-wrap"><div id="progress-bar"></div></div>
+<header>
+  <div id="quiz-title">Quiz — Contextos com Porcentagem</div>
+  <div id="counter"></div>
+</header>
+<div id="streak-badge"></div>
+<div id="section-label"></div>
+<div class="card" id="q-card">
+  <div id="question-label"></div>
+  <div id="question-text"></div>
+  <div id="options-container"></div>
+</div>
+<div id="feedback"><span id="feedback-icon"></span> <span id="feedback-text"></span></div>
+<div id="nav">
+  <button class="btn" id="btn-back" onclick="goBack()">← Voltar</button>
+  <button class="btn" id="btn-next" onclick="goNext()" disabled>Próxima →</button>
+</div>
+<div id="final">
+  <canvas id="confetti-canvas"></canvas>
+  <div id="medal"></div>
+  <div id="final-title"></div>
+  <div id="final-sub"></div>
+  <div class="stat-row">
+    <div class="stat"><div class="val" id="stat-pct"></div><div class="lbl">Acertos</div></div>
+    <div class="stat"><div class="val" id="stat-streak"></div><div class="lbl">Maior streak</div></div>
+    <div class="stat"><div class="val" id="stat-errors"></div><div class="lbl">Erros</div></div>
+  </div>
+  <button id="btn-replay" onclick="replay()">🔄 Jogar Novamente</button>
+</div>
+<script>
+const Q=[{"id": "E1Q1", "section": "📘 Exercício 1", "label": "Questão 1", "text": "Em uma turma do 9º ano há 90 alunos, sendo 50% do sexo masculino. Quantas são as <strong>meninas</strong> da turma?", "options": ["45", "40", "50", "55"], "correct": 0, "explanation": "50% são meninos → 50% são meninas.<br>50% de 90 = 90 ÷ 2 = <strong>45 meninas</strong>"}, {"id": "E1Q2", "section": "📘 Exercício 1", "label": "Questão 2", "text": "Dos 28 alunos de uma turma do 9º ano, 25% já decidiram a área profissional que desejam seguir. Quantos são esses alunos?", "options": ["7", "5", "9", "14"], "correct": 0, "explanation": "25% de 28 = 28 ÷ 4 = <strong>7 alunos</strong>"}, {"id": "E1Q3a", "section": "📘 Exercício 1", "label": "Questão 3a", "text": "Paola quer comprar um <em>tablet</em> que custa R$ 1.400,00. O vendedor propôs um desconto de 5%. Qual seria o <strong>valor do desconto</strong>?", "options": ["R$ 70,00", "R$ 140,00", "R$ 35,00", "R$ 105,00"], "correct": 0, "explanation": "5% de R$ 1.400,00 = 1.400 × 0,05 = <strong>R$ 70,00</strong>"}, {"id": "E1Q3b", "section": "📘 Exercício 1", "label": "Questão 3b", "text": "Ao final da negociação, Paola conseguiu um desconto de 7,5% sobre R$ 1.400,00. De quanto foi esse desconto?", "options": ["R$ 105,00", "R$ 70,00", "R$ 98,00", "R$ 112,00"], "correct": 0, "explanation": "7,5% de R$ 1.400,00 = 1.400 × 0,075 = <strong>R$ 105,00</strong>"}, {"id": "E1Q4", "section": "📘 Exercício 1", "label": "Questão 4", "text": "Uma prestadora oferece 10% de desconto para contas pagas em até 8 dias. Marcela recebeu um desconto de R$ 18,15. Qual era o <strong>valor original</strong> da conta de Marcela?", "options": ["R$ 181,50", "R$ 163,35", "R$ 199,65", "R$ 171,50"], "correct": 0, "explanation": "10% = R$ 18,15 → 100% = R$ 18,15 ÷ 0,10 = <strong>R$ 181,50</strong>"}, {"id": "E1Q5", "section": "📘 Exercício 1", "label": "Questão 5", "text": "Uma escola de idiomas cobra 20% de entrada e o restante dividido em 4 parcelas. Bruno pagou R$ 320,00 de entrada. Qual é o <strong>valor total</strong> do curso?", "options": ["R$ 1.600,00", "R$ 1.280,00", "R$ 1.920,00", "R$ 2.000,00"], "correct": 0, "explanation": "R$ 320,00 = 20% do total → total = 320 ÷ 0,20 = <strong>R$ 1.600,00</strong>"}, {"id": "E1Q6", "section": "📘 Exercício 1", "label": "Questão 6", "text": "Carolina comprou um leitor digital por R$ 576,60 com 7% de desconto. Qual era o <strong>preço original</strong> do leitor?", "options": ["R$ 620,00", "R$ 616,96", "R$ 630,00", "R$ 610,00"], "correct": 0, "explanation": "R$ 576,60 = 93% do preço original<br>Preço original = 576,60 ÷ 0,93 = <strong>R$ 620,00</strong>"}, {"id": "E1Q7b", "section": "📘 Exercício 1", "label": "Questão 7b", "text": "Uma empresa reduziu o rolo de papel higiênico de 30 m para 20 m, mantendo o preço de R$ 3,30. Qual foi o <strong>aumento percentual</strong> no preço pago pelo consumidor por metro de papel?", "options": ["50%", "33%", "25%", "67%"], "correct": 0, "explanation": "Antes: R$ 3,30 ÷ 30 m = R$ 0,11/m<br>Depois: R$ 3,30 ÷ 20 m = R$ 0,165/m<br>Aumento = (0,165 − 0,11) ÷ 0,11 × 100 = <strong>50%</strong>"}, {"id": "E2Q1b", "section": "📗 Porcentagens Sucessivas", "label": "Exercício 2 — Q1b", "text": "André teve dois aumentos sucessivos: 5% em março e 8% em outubro. Qual foi o <strong>aumento percentual real</strong> acumulado no salário?", "options": ["13,4%", "13%", "12,6%", "14%"], "correct": 0, "explanation": "Aumento real = 1,05 × 1,08 − 1 = 1,134 − 1 = 0,134 = <strong>13,4%</strong><br>(Não é 13%, pois os percentuais não se somam diretamente!)"}, {"id": "E2Q3a", "section": "📗 Porcentagens Sucessivas", "label": "Exercício 2 — Q3a", "text": "No 6º ano a mensalidade era R$ 2.200,00. Os aumentos foram: 7º ano = 8%, 8º ano = 9%, 9º ano = 7%. Qual é a <strong>mensalidade atual</strong> (9º ano)?", "options": ["R$ 2.771,13", "R$ 2.860,00", "R$ 2.706,00", "R$ 2.750,00"], "correct": 0, "explanation": "2.200 × 1,08 = 2.376<br>2.376 × 1,09 = 2.589,84<br>2.589,84 × 1,07 ≈ <strong>R$ 2.771,13</strong>"}, {"id": "E2Q3b", "section": "📗 Porcentagens Sucessivas", "label": "Exercício 2 — Q3b", "text": "Com aumentos de 8%, 9% e 7% aplicados sucessivamente, qual foi o <strong>aumento percentual acumulado</strong> do 6º ao 9º ano?", "options": ["≈ 26%", "= 24%", "= 28%", "≈ 22%"], "correct": 0, "explanation": "1,08 × 1,09 × 1,07 = 1,2600 → aumento de <strong>≈ 26%</strong> no total<br>(8 + 9 + 7 = 24% seria errado — percentuais sucessivos não somam)"}, {"id": "E2Q4", "section": "📗 Porcentagens Sucessivas", "label": "Exercício 2 — Q4", "text": "Henrique pediu R$ 20.000,00 emprestado de Francisco por 5 meses. Opções: juros simples 4%/mês ou juros compostos 4%/mês. Na posição de Francisco (credor), qual proposta ele deveria <strong>aceitar</strong>?", "options": ["Juros compostos — recebe mais", "Juros simples — recebe mais", "As duas são iguais", "Nenhuma das duas é vantajosa"], "correct": 0, "explanation": "Juros simples: 20.000 × (1 + 0,04×5) = R$ 24.000,00<br>Juros compostos: 20.000 × (1,04)⁵ ≈ R$ 24.333,06<br>Francisco recebe mais com <strong>juros compostos</strong>"}, {"id": "TESTE1", "section": "📝 Teste", "label": "Questão 1 — Teste", "text": "Um comerciante aumentou em 75% o preço original <em>x</em> de uma mercadoria. Em seguida, deu 50% de desconto, resultando em R$ 210,00. Qual é o valor de <em>x</em>?", "options": ["R$ 240,00", "R$ 260,00", "R$ 280,00", "R$ 300,00"], "correct": 0, "explanation": "Após 75% de aumento: 1,75x<br>Após 50% de desconto: 0,5 × 1,75x = 0,875x = 210<br>x = 210 ÷ 0,875 = <strong>R$ 240,00</strong>"}, {"id": "EC1ab", "section": "🏠 Em Casa — Questão 1", "label": "Em Casa 1 (a e b)", "text": "Cálculo mental — responda:<br><br><strong>a)</strong> Quanto é 50% de 1060?<br><strong>b)</strong> Quanto é 25% de 840?", "options": ["a) 530 · b) 210", "a) 530 · b) 420", "a) 106 · b) 210", "a) 260 · b) 210"], "correct": 0, "explanation": "a) 50% = metade → 1060 ÷ 2 = <strong>530</strong><br>b) 25% = quarta parte → 840 ÷ 4 = <strong>210</strong>"}, {"id": "EC1cd", "section": "🏠 Em Casa — Questão 1", "label": "Em Casa 1 (c e d)", "text": "Cálculo mental — responda:<br><br><strong>c)</strong> Quanto é 10% de 925?<br><strong>d)</strong> Quanto é 5% de 600?", "options": ["c) 92,5 · d) 30", "c) 92,5 · d) 60", "c) 9,25 · d) 30", "c) 92,5 · d) 12"], "correct": 0, "explanation": "c) 10% → divide por 10 → <strong>92,5</strong><br>d) 5% = metade de 10% → 60 ÷ 2 = <strong>30</strong>"}, {"id": "EC1ef", "section": "🏠 Em Casa — Questão 1", "label": "Em Casa 1 (e e f)", "text": "Cálculo mental — responda:<br><br><strong>e)</strong> Quanto é 20% de 1050?<br><strong>f)</strong> Quanto é 30% de 500?", "options": ["e) 210 · f) 150", "e) 105 · f) 150", "e) 210 · f) 100", "e) 200 · f) 150"], "correct": 0, "explanation": "e) 20% = 2 × 10% → 105 × 2 = <strong>210</strong><br>f) 30% = 3 × 10% → 50 × 3 = <strong>150</strong>"}, {"id": "EC1g", "section": "🏠 Em Casa — Questão 1", "label": "Em Casa 1g", "text": "Cálculo mental:<br><br><strong>Quanto é 75% de 2000?</strong>", "options": ["1500", "1000", "1200", "1750"], "correct": 0, "explanation": "75% = 50% + 25% → 1000 + 500 = <strong>1500</strong>"}, {"id": "EC1hi", "section": "🏠 Em Casa — Questão 1", "label": "Em Casa 1 (h e i)", "text": "Cálculo mental — responda:<br><br><strong>h)</strong> 425 correspondem a 50% de que valor?<br><strong>i)</strong> 180 correspondem a 20% de que valor?", "options": ["h) 850 · i) 900", "h) 212,5 · i) 900", "h) 850 · i) 360", "h) 850 · i) 36"], "correct": 0, "explanation": "h) 50% → multiplica por 2 → 425 × 2 = <strong>850</strong><br>i) 20% → divide por 0,20 → 180 ÷ 0,20 = <strong>900</strong>"}, {"id": "EC1jk", "section": "🏠 Em Casa — Questão 1", "label": "Em Casa 1 (j e k)", "text": "Cálculo mental — responda:<br><br><strong>j)</strong> 200 correspondem a 25% de que valor?<br><strong>k)</strong> 45 correspondem a 5% de que valor?", "options": ["j) 800 · k) 900", "j) 50 · k) 900", "j) 800 · k) 225", "j) 400 · k) 900"], "correct": 0, "explanation": "j) 25% → multiplica por 4 → 200 × 4 = <strong>800</strong><br>k) 5% → divide por 0,05 → 45 ÷ 0,05 = <strong>900</strong>"}, {"id": "EC2a", "section": "🏠 Em Casa — Questão 2", "label": "Em Casa 2a", "text": "Uma conta de R$ 124,00 foi paga com 5% de desconto. Qual foi o <strong>valor pago</strong>?", "options": ["R$ 117,80", "R$ 118,00", "R$ 119,00", "R$ 116,50"], "correct": 0, "explanation": "Valor pago = 95% de R$ 124,00<br>= 124 × 0,95 = <strong>R$ 117,80</strong>"}, {"id": "EC2b", "section": "🏠 Em Casa — Questão 2", "label": "Em Casa 2b", "text": "Em uma escola, 20% dos alunos torcem pelo time mais popular da cidade. Essa porcentagem equivale a 170 torcedores. Qual é o <strong>total de alunos</strong> da escola?", "options": ["850", "680", "1.000", "340"], "correct": 0, "explanation": "20% = 170 → 100% = 170 ÷ 0,20 = <strong>850 alunos</strong>"}, {"id": "EC2c", "section": "🏠 Em Casa — Questão 2", "label": "Em Casa 2c", "text": "Em uma escola, 65% dos alunos estão nos Anos Iniciais. Há 301 alunos nos Anos Finais. Qual é o <strong>total de alunos</strong> no Ensino Fundamental?", "options": ["860", "463", "762", "301"], "correct": 0, "explanation": "Anos Finais = 35% → 35% = 301<br>Total = 301 ÷ 0,35 = <strong>860 alunos</strong>"}, {"id": "EC3a", "section": "🏠 Em Casa — Questão 3", "label": "Em Casa 3a", "text": "O pai de Karina pode comprar um notebook com 5% de desconto à vista por R$ 2.660,00. Qual é o <strong>preço original</strong> do notebook?", "options": ["R$ 2.800,00", "R$ 2.793,00", "R$ 2.750,00", "R$ 2.660,00"], "correct": 0, "explanation": "R$ 2.660,00 = 95% do preço original<br>Preço original = 2.660 ÷ 0,95 = <strong>R$ 2.800,00</strong>"}, {"id": "EC3b", "section": "🏠 Em Casa — Questão 3", "label": "Em Casa 3b", "text": "O notebook original custa R$ 2.800,00 e à vista com desconto sai R$ 2.660,00. As parcelas propostas (8× de R$ 350,00 ou 15× de R$ 210,00) correspondem ao valor total ou ao valor à vista?", "options": ["8× = preço original · 15× = valor maior que o original", "8× = valor à vista · 15× = preço original", "Ambas correspondem ao valor à vista", "8× = R$ 2.800 · 15× = R$ 2.660"], "correct": 0, "explanation": "8 × R$ 350 = R$ 2.800 (= preço original, sem desconto)<br>15 × R$ 210 = R$ 3.150 (= mais caro que o original!)<br><strong>Parcelado sai mais caro.</strong>"}, {"id": "Q4a", "section": "📊 Porcentagens Sucessivas — Q4", "label": "Questão 4a", "text": "Calcule a <strong>porcentagem total</strong> de dois aumentos sucessivos de <strong>5% e 6%</strong>.", "options": ["11,3%", "11%", "10,8%", "12%"], "correct": 0, "explanation": "1,05 × 1,06 = 1,113 → aumento total de <strong>11,3%</strong><br>(Não é 11% — o segundo % incide sobre o valor já aumentado)"}, {"id": "Q4b", "section": "📊 Porcentagens Sucessivas — Q4", "label": "Questão 4b", "text": "Calcule a <strong>porcentagem total</strong> de dois aumentos sucessivos de <strong>10% e 10%</strong>.", "options": ["21%", "20%", "22%", "19%"], "correct": 0, "explanation": "1,10 × 1,10 = 1,21 → aumento total de <strong>21%</strong><br>(Não é 20% — o segundo 10% incide sobre o valor já acrescido)"}, {"id": "Q4c", "section": "📊 Porcentagens Sucessivas — Q4", "label": "Questão 4c", "text": "Calcule a <strong>porcentagem total</strong> de dois aumentos sucessivos de <strong>20% e 10%</strong>.", "options": ["32%", "30%", "31%", "33%"], "correct": 0, "explanation": "1,20 × 1,10 = 1,32 → aumento total de <strong>32%</strong>"}, {"id": "Q4d", "section": "📊 Porcentagens Sucessivas — Q4", "label": "Questão 4d", "text": "Calcule a <strong>porcentagem total</strong> de dois aumentos sucessivos de <strong>8% e 5%</strong>.", "options": ["13,4%", "13%", "12,5%", "14%"], "correct": 0, "explanation": "1,08 × 1,05 = 1,134 → aumento total de <strong>13,4%</strong>"}, {"id": "Q4e", "section": "📊 Porcentagens Sucessivas — Q4", "label": "Questão 4e", "text": "Calcule a <strong>porcentagem total</strong> de dois aumentos sucessivos de <strong>5% e 8%</strong>.", "options": ["13,4%", "13%", "12,5%", "14%"], "correct": 0, "explanation": "1,05 × 1,08 = 1,134 → aumento total de <strong>13,4%</strong><br>(Mesma resposta que 8% e 5% — a ordem não altera o resultado!)"}, {"id": "Q5a", "section": "🌿 Questão 5 — Mata Atlântica", "label": "Questão 5a", "text": "A Mata Atlântica ocupava originalmente 1,3 milhão de km². O território brasileiro tem aproximadamente 8,5 milhões de km². A área original da Mata Atlântica correspondia a aproximadamente <strong>15%</strong> do território?", "options": ["Sim — corresponde a ≈ 15,3%", "Não — corresponde a ≈ 10%", "Não — corresponde a ≈ 20%", "Sim — corresponde exatamente a 15%"], "correct": 0, "explanation": "1,3 ÷ 8,5 ≈ 0,153 = <strong>15,3%</strong> → sim, aproximadamente 15% ✓"}, {"id": "Q5b", "section": "🌿 Questão 5 — Mata Atlântica", "label": "Questão 5b", "text": "Atualmente restam apenas 7% da área original da Mata Atlântica (1,3 mi km²). Essa área atual corresponde a aproximadamente <strong>quantos por cento</strong> do território brasileiro (8,5 mi km²)?", "options": ["≈ 1,07%", "≈ 7%", "≈ 5%", "≈ 2%"], "correct": 0, "explanation": "Área atual = 7% de 1,3 mi = 0,091 mi km²<br>0,091 ÷ 8,5 ≈ 0,0107 = <strong>≈ 1,07%</strong> do Brasil"}];
+const L=['A','B','C','D'];
+let cur=0,ans={},streak=0,maxStreak=0,errors=0;
+
+function render(){
+  const q=Q[cur],n=Q.length;
+  document.getElementById('progress-bar').style.width=(cur/n*100)+'%';
+  document.getElementById('counter').textContent=(cur+1)+' / '+n;
+  document.getElementById('section-label').textContent=q.section||'';
+  document.getElementById('question-label').textContent=q.label||'';
+  document.getElementById('question-text').innerHTML=q.text;
+  const oc=document.getElementById('options-container');
+  oc.innerHTML='';
+  const done=ans[cur]!==undefined;
+  q.options.forEach((o,i)=>{
+    const b=document.createElement('button');
+    b.className='opt';
+    if(done){b.disabled=true;if(i===q.correct)b.classList.add('correct');else if(i===ans[cur])b.classList.add('wrong');}
+    b.innerHTML=`<span class="letter">${L[i]}</span><span>${o}</span>`;
+    b.onclick=()=>answer(i);
+    oc.appendChild(b);
+  });
+  const fb=document.getElementById('feedback');
+  if(done){
+    fb.className='show '+(ans[cur]===q.correct?'ok':'err');
+    document.getElementById('feedback-icon').textContent=ans[cur]===q.correct?'✅':'❌';
+    document.getElementById('feedback-text').innerHTML=q.explanation;
+    document.getElementById('btn-next').disabled=false;
+  }else{fb.className='';document.getElementById('btn-next').disabled=true;}
+  const bd=document.getElementById('streak-badge');
+  bd.innerHTML=streak>=2?`<span>${sl(streak)}</span>`:'';
+  document.getElementById('btn-back').disabled=cur===0;
+}
+
+function sl(n){
+  if(n>=8)return n+' seguidas! 💥 Lendário!';
+  if(n>=5)return n+' seguidas! 🔥🔥';
+  return n+' seguidas! 🔥';
+}
+
+function answer(i){
+  if(ans[cur]!==undefined)return;
+  ans[cur]=i;
+  if(i===Q[cur].correct){streak++;if(streak>maxStreak)maxStreak=streak;}
+  else{streak=0;errors++;}
+  render();
+}
+
+function goNext(){
+  if(cur<Q.length-1){cur++;render();window.scrollTo(0,0);}
+  else showFinal();
+}
+
+function goBack(){
+  if(cur>0){cur--;streak=0;render();window.scrollTo(0,0);}
+}
+
+function showFinal(){
+  ['q-card','feedback','nav','streak-badge','section-label'].forEach(id=>document.getElementById(id).style.display='none');
+  document.getElementById('progress-bar').style.width='100%';
+  let c=0;for(let k in ans){if(ans[k]===Q[k].correct)c++;}
+  const pct=Math.round(c/Q.length*100);
+  document.getElementById('stat-pct').textContent=pct+'%';
+  document.getElementById('stat-streak').textContent=maxStreak+' 🔥';
+  document.getElementById('stat-errors').textContent=errors;
+  let medal,title,sub;
+  if(pct===100){medal='🏆';title='Perfeito!';sub='Nota 100! Você dominou porcentagem!';}
+  else if(pct>=90){medal='🥇';title='Medalha de Ouro!';sub='Excelente! Quase perfeito!';}
+  else if(pct>=70){medal='🥈';title='Medalha de Prata!';sub='Muito bem! Continue praticando!';}
+  else if(pct>=50){medal='🥉';title='Medalha de Bronze!';sub='Bom começo! Revise e tente novamente.';}
+  else{medal='📚';title='Continue Estudando!';sub='Revise o módulo e tente de novo!';}
+  document.getElementById('medal').textContent=medal;
+  document.getElementById('final-title').textContent=title;
+  document.getElementById('final-sub').textContent=c+' de '+Q.length+' corretas ('+pct+'%). '+sub;
+  document.getElementById('final').style.display='block';
+  if(pct>=70)confetti();
+}
+
+function replay(){
+  cur=0;ans={};streak=0;maxStreak=0;errors=0;
+  ['q-card','feedback','nav','streak-badge','section-label'].forEach(id=>document.getElementById(id).style.display='');
+  document.getElementById('final').style.display='none';
+  render();window.scrollTo(0,0);
+}
+
+function confetti(){
+  const cv=document.getElementById('confetti-canvas');
+  cv.width=window.innerWidth;cv.height=window.innerHeight;
+  const ctx=cv.getContext('2d');
+  const cols=['#00e5ff','#39ff14','#ffea00','#ff1744','#ffffff'];
+  const ps=Array.from({length:150},()=>{return{x:Math.random()*cv.width,y:Math.random()*-cv.height,
+    r:Math.random()*6+3,c:cols[Math.floor(Math.random()*cols.length)],
+    vx:(Math.random()-.5)*3,vy:Math.random()*4+2,a:1}});
+  let fr=0;
+  function draw(){
+    ctx.clearRect(0,0,cv.width,cv.height);
+    ps.forEach(p=>{ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,2*Math.PI);
+      ctx.fillStyle=p.c;ctx.globalAlpha=p.a;ctx.fill();
+      p.x+=p.vx;p.y+=p.vy;if(p.y>cv.height){p.y=-10;p.x=Math.random()*cv.width;}
+      if(fr>120)p.a-=.008;});
+    ctx.globalAlpha=1;fr++;
+    if(fr<220)requestAnimationFrame(draw);else ctx.clearRect(0,0,cv.width,cv.height);
+  }
+  draw();
+}
+
+render();
+</script>
+</body>
+</html>

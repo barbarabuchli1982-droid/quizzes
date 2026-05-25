@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz — Operações com Números Irracionais</title>
+<style>
+  :root {
+    --cyan: #00e5ff;
+    --green: #39ff14;
+    --bg: #0a0a0a;
+    --card: #111;
+    --border: #1e1e1e;
+    --text: #e0e0e0;
+    --muted: #666;
+    --correct: #39ff14;
+    --wrong: #ff1744;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg); color: var(--text); font-family: 'Segoe UI', Arial, sans-serif;
+    min-height: 100vh; display: flex; flex-direction: column; align-items: center;
+    padding: 0 12px 40px;
+  }
+  /* PROGRESS BAR */
+  #progress-wrap {
+    width: 100%; max-width: 680px; height: 5px; background: #1a1a1a;
+    margin-bottom: 0; position: sticky; top: 0; z-index: 10;
+  }
+  #progress-bar {
+    height: 100%; width: 0%;
+    background: linear-gradient(90deg, var(--cyan), var(--green));
+    transition: width .4s ease;
+  }
+  /* HEADER */
+  header {
+    width: 100%; max-width: 680px; padding: 18px 0 8px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  #quiz-title { font-size: 13px; color: var(--muted); letter-spacing: .5px; text-transform: uppercase; }
+  #counter { font-size: 13px; color: var(--cyan); font-weight: bold; }
+  /* STREAK */
+  #streak-badge {
+    width: 100%; max-width: 680px; text-align: right;
+    min-height: 28px; margin-bottom: 4px;
+  }
+  #streak-badge span {
+    display: inline-block; background: #ff6d00; color: white;
+    padding: 3px 12px; border-radius: 20px; font-size: 13px; font-weight: bold;
+    animation: pop .3s ease;
+  }
+  @keyframes pop { 0%{transform:scale(.7)} 60%{transform:scale(1.2)} 100%{transform:scale(1)} }
+  /* SECTION LABEL */
+  #section-label {
+    width: 100%; max-width: 680px; font-size: 11px;
+    color: var(--cyan); letter-spacing: 1px; text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  /* CARD */
+  .card {
+    width: 100%; max-width: 680px; background: var(--card);
+    border: 1px solid var(--border); border-radius: 14px;
+    padding: 26px 24px 20px; margin-bottom: 16px;
+  }
+  #question-label { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+  #question-text {
+    font-size: 18px; line-height: 1.6; color: var(--text);
+    margin-bottom: 18px;
+  }
+  #question-svg {
+    width: 100%; max-width: 320px; display: block; margin: 0 auto 20px;
+  }
+  /* OPTIONS */
+  .opt {
+    width: 100%; text-align: left; background: #181818;
+    border: 1.5px solid #2a2a2a; border-radius: 10px;
+    padding: 13px 16px; margin-bottom: 10px; cursor: pointer;
+    font-size: 16px; color: var(--text); transition: border-color .2s, background .2s;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .opt:hover:not(:disabled) { border-color: var(--cyan); background: #141c1c; }
+  .opt .letter {
+    width: 26px; height: 26px; border-radius: 50%;
+    border: 1.5px solid #444; display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: bold; flex-shrink: 0;
+  }
+  .opt.correct { border-color: var(--correct); background: #0a1f0a; }
+  .opt.correct .letter { background: var(--correct); border-color: var(--correct); color: #000; }
+  .opt.wrong { border-color: var(--wrong); background: #1f0a0a; }
+  .opt.wrong .letter { background: var(--wrong); border-color: var(--wrong); color: #fff; }
+  .opt:disabled { cursor: default; }
+  /* FEEDBACK */
+  #feedback {
+    width: 100%; max-width: 680px; border-radius: 10px;
+    padding: 14px 18px; margin-bottom: 16px; font-size: 15px; line-height: 1.6;
+    display: none;
+  }
+  #feedback.show { display: block; }
+  #feedback.ok { background: #0a1f0a; border: 1px solid var(--correct); color: #b9f6b9; }
+  #feedback.err { background: #1f0a0a; border: 1px solid var(--wrong); color: #ffb3b3; }
+  #feedback-icon { font-size: 18px; margin-right: 6px; }
+  /* NAV */
+  #nav {
+    width: 100%; max-width: 680px; display: flex; gap: 12px;
+  }
+  .btn {
+    flex: 1; padding: 14px; border-radius: 10px; border: none;
+    font-size: 16px; font-weight: bold; cursor: pointer; transition: opacity .2s;
+  }
+  .btn:disabled { opacity: .35; cursor: default; }
+  #btn-back { background: #1e1e1e; color: var(--text); }
+  #btn-next { background: linear-gradient(135deg, var(--cyan), #006080); color: #000; }
+  #btn-next:hover:not(:disabled) { opacity: .88; }
+  /* FINAL SCREEN */
+  #final {
+    display: none; width: 100%; max-width: 680px;
+    text-align: center; padding: 30px 20px;
+  }
+  #medal { font-size: 72px; margin-bottom: 12px; }
+  #final-title { font-size: 28px; font-weight: bold; color: var(--cyan); margin-bottom: 8px; }
+  #final-sub { font-size: 16px; color: var(--muted); margin-bottom: 24px; }
+  .stat-row {
+    display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 28px;
+  }
+  .stat {
+    background: #111; border: 1px solid #222; border-radius: 12px;
+    padding: 14px 22px; min-width: 130px;
+  }
+  .stat .val { font-size: 30px; font-weight: bold; color: var(--cyan); }
+  .stat .lbl { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  #btn-replay {
+    background: linear-gradient(135deg, var(--green), #006010);
+    color: #000; border: none; border-radius: 10px;
+    padding: 15px 40px; font-size: 18px; font-weight: bold; cursor: pointer;
+  }
+  canvas { position: fixed; top: 0; left: 0; pointer-events: none; z-index: 999; }
+  /* SVG container */
+  .svg-wrap { width:100%; max-width:320px; margin: 0 auto 20px; display:block; }
+</style>
+</head>
+<body>
+<div id="progress-wrap"><div id="progress-bar"></div></div>
+
+<header>
+  <div id="quiz-title">Quiz — Operações com Números Irracionais</div>
+  <div id="counter"></div>
+</header>
+
+<div id="streak-badge"></div>
+<div id="section-label"></div>
+
+<div class="card" id="q-card">
+  <div id="question-label"></div>
+  <div id="question-text"></div>
+  <div id="svg-container"></div>
+  <div id="options-container"></div>
+</div>
+
+<div id="feedback"><span id="feedback-icon"></span><span id="feedback-text"></span></div>
+
+<div id="nav">
+  <button class="btn" id="btn-back" onclick="goBack()">← Voltar</button>
+  <button class="btn" id="btn-next" onclick="goNext()" disabled>Próxima →</button>
+</div>
+
+<div id="final">
+  <canvas id="confetti-canvas"></canvas>
+  <div id="medal"></div>
+  <div id="final-title"></div>
+  <div id="final-sub"></div>
+  <div class="stat-row">
+    <div class="stat"><div class="val" id="stat-pct"></div><div class="lbl">Acertos</div></div>
+    <div class="stat"><div class="val" id="stat-streak">🔥</div><div class="lbl">Maior streak</div></div>
+    <div class="stat"><div class="val" id="stat-errors"></div><div class="lbl">Erros</div></div>
+  </div>
+  <button id="btn-replay" onclick="replay()">🔄 Jogar Novamente</button>
+</div>
+
+<script>
+const QUESTIONS = [{"id": "T1", "section": "📝 Teste — Saresp", "label": "Questão Saresp", "text": "A diagonal de um quadrado mede 60√2 m. Quanto mede o <strong>lado</strong> desse quadrado?", "svg": "<svg viewBox=\"0 0 200 200\" xmlns=\"http://www.w3.org/2000/svg\" font-family=\"monospace\">\n          <rect x=\"30\" y=\"30\" width=\"140\" height=\"140\" fill=\"#0a1a0a\" stroke=\"#00e5ff\" stroke-width=\"2\"/>\n          <line x1=\"30\" y1=\"30\" x2=\"170\" y2=\"170\" stroke=\"#39ff14\" stroke-width=\"2\" stroke-dasharray=\"6,3\"/>\n          <text x=\"85\" y=\"120\" fill=\"#39ff14\" font-size=\"13\">60√2 m</text>\n          <text x=\"155\" y=\"110\" fill=\"white\" font-size=\"12\">l = ?</text>\n        </svg>", "options": ["50 m", "60 m", "90 m", "100 m"], "correct": 1, "explanation": "Relação diagonal-lado: d = l√2<br>60√2 = l√2 → <strong>l = 60 m</strong>"}, {"id": "T2", "section": "📝 Teste", "label": "Questão 2 — Teste", "text": "Assinale o resultado simplificado da potência (−7x · √(2x))²", "options": ["−14x²", "98x³", "49x³√2", "49x²√(2x)"], "correct": 1, "explanation": "(−7x · √(2x))² = (−7x)² · (√(2x))²<br>= 49x² · 2x = <strong>98x³</strong>"}, {"id": "Q3a", "section": "📐 Figuras Geométricas", "label": "Questão 3a", "text": "Determine a medida de <em>x</em> em centímetros. Simplifique se possível.", "svg": "<svg viewBox=\"0 0 220 170\" xmlns=\"http://www.w3.org/2000/svg\" font-family=\"monospace\">\n          <polygon points=\"30,145 30,25 190,145\" fill=\"#0d1f0d\" stroke=\"#00e5ff\" stroke-width=\"2\"/>\n          <polyline points=\"30,125 48,125 48,145\" fill=\"none\" stroke=\"#aaa\" stroke-width=\"1.5\"/>\n          <text x=\"2\" y=\"90\" fill=\"white\" font-size=\"15\">√3</text>\n          <text x=\"95\" y=\"162\" fill=\"white\" font-size=\"15\">2√5</text>\n          <text x=\"115\" y=\"90\" fill=\"#39ff14\" font-size=\"17\" font-weight=\"bold\">x</text>\n          <text x=\"8\" y=\"22\" fill=\"#888\" font-size=\"11\">A</text>\n          <text x=\"193\" y=\"150\" fill=\"#888\" font-size=\"11\">B</text>\n          <text x=\"12\" y=\"158\" fill=\"#888\" font-size=\"11\">C</text>\n        </svg>", "options": ["√23 cm", "√17 cm", "2√5 cm", "√28 cm"], "correct": 0, "explanation": "Teorema de Pitágoras (AC² + CB² = AB²):<br>x² = (√3)² + (2√5)² = 3 + 20 = 23<br><strong>x = √23 cm</strong>"}, {"id": "Q3b", "section": "📐 Figuras Geométricas", "label": "Questão 3b", "text": "Determine a medida de <em>x</em> em centímetros. Simplifique se possível.", "svg": "<svg viewBox=\"0 0 240 160\" xmlns=\"http://www.w3.org/2000/svg\" font-family=\"monospace\">\n          <polygon points=\"20,20 210,20 210,140\" fill=\"#0d1f0d\" stroke=\"#00e5ff\" stroke-width=\"2\"/>\n          <polyline points=\"190,20 190,40 210,40\" fill=\"none\" stroke=\"#aaa\" stroke-width=\"1.5\"/>\n          <text x=\"105\" y=\"14\" fill=\"#39ff14\" font-size=\"16\" font-weight=\"bold\">x</text>\n          <text x=\"215\" y=\"85\" fill=\"white\" font-size=\"14\">√3</text>\n          <text x=\"90\" y=\"100\" fill=\"white\" font-size=\"14\">3√7</text>\n          <text x=\"4\" y=\"18\" fill=\"#888\" font-size=\"11\">A</text>\n          <text x=\"213\" y=\"15\" fill=\"#888\" font-size=\"11\">C</text>\n          <text x=\"213\" y=\"148\" fill=\"#888\" font-size=\"11\">B</text>\n        </svg>", "options": ["2√15 cm", "3√6 cm", "√60 cm", "4√3 cm"], "correct": 0, "explanation": "Teorema de Pitágoras (x² + (√3)² = (3√7)²):<br>x² = 63 − 3 = 60<br>x = √60 = √(4·15) = <strong>2√15 cm</strong>"}, {"id": "Q3c", "section": "📐 Figuras Geométricas", "label": "Questão 3c", "text": "O quadrado ABCD tem lado 2√3 cm. Determine a medida da diagonal <em>x</em>.", "svg": "<svg viewBox=\"0 0 200 200\" xmlns=\"http://www.w3.org/2000/svg\" font-family=\"monospace\">\n          <rect x=\"30\" y=\"30\" width=\"140\" height=\"140\" fill=\"#0d1f0d\" stroke=\"#00e5ff\" stroke-width=\"2\"/>\n          <line x1=\"30\" y1=\"30\" x2=\"170\" y2=\"170\" stroke=\"#39ff14\" stroke-width=\"2\" stroke-dasharray=\"5,3\"/>\n          <text x=\"90\" y=\"110\" fill=\"#39ff14\" font-size=\"16\" font-weight=\"bold\">x</text>\n          <text x=\"172\" y=\"105\" fill=\"white\" font-size=\"14\">2√3</text>\n          <text x=\"85\" y=\"185\" fill=\"white\" font-size=\"14\">2√3</text>\n          <text x=\"5\" y=\"28\" fill=\"#888\" font-size=\"11\">D</text>\n          <text x=\"172\" y=\"28\" fill=\"#888\" font-size=\"11\">C</text>\n          <text x=\"5\" y=\"178\" fill=\"#888\" font-size=\"11\">A</text>\n          <text x=\"172\" y=\"178\" fill=\"#888\" font-size=\"11\">B</text>\n        </svg>", "options": ["2√6 cm", "4√3 cm", "√12 cm", "2√5 cm"], "correct": 0, "explanation": "Diagonal = lado · √2<br>x = 2√3 · √2 = 2√6 cm<br><strong>x = 2√6 cm</strong>"}, {"id": "Q3d", "section": "📐 Figuras Geométricas", "label": "Questão 3d", "text": "O quadrado ABCD tem diagonal 5√2 cm. Determine a medida do lado <em>x</em>.", "svg": "<svg viewBox=\"0 0 200 200\" xmlns=\"http://www.w3.org/2000/svg\" font-family=\"monospace\">\n          <rect x=\"30\" y=\"30\" width=\"140\" height=\"140\" fill=\"#0d1f0d\" stroke=\"#00e5ff\" stroke-width=\"2\"/>\n          <line x1=\"30\" y1=\"30\" x2=\"170\" y2=\"170\" stroke=\"#39ff14\" stroke-width=\"2\" stroke-dasharray=\"5,3\"/>\n          <text x=\"88\" y=\"115\" fill=\"#39ff14\" font-size=\"14\">5√2</text>\n          <text x=\"82\" y=\"185\" fill=\"white\" font-size=\"16\" font-weight=\"bold\">x</text>\n          <text x=\"5\" y=\"28\" fill=\"#888\" font-size=\"11\">D</text>\n          <text x=\"172\" y=\"28\" fill=\"#888\" font-size=\"11\">C</text>\n          <text x=\"5\" y=\"178\" fill=\"#888\" font-size=\"11\">A</text>\n          <text x=\"172\" y=\"178\" fill=\"#888\" font-size=\"11\">B</text>\n        </svg>", "options": ["5 cm", "5√2 cm", "√10 cm", "2√5 cm"], "correct": 0, "explanation": "Diagonal = lado · √2<br>5√2 = x · √2 → <strong>x = 5 cm</strong>"}, {"id": "EC1a", "section": "🏠 Em Casa — Questão 1", "label": "Em Casa 1a", "text": "Efetue e simplifique quando possível:<br><br><strong>⁵√13 · ⁵√6 = ?</strong>", "options": ["⁵√78", "⁵√19", "³⁰√78", "√78"], "correct": 0, "explanation": "Radicais com mesmo índice: multiplica os radicandos.<br>⁵√13 · ⁵√6 = ⁵√(13·6) = <strong>⁵√78</strong>"}, {"id": "EC1d", "section": "🏠 Em Casa — Questão 1", "label": "Em Casa 1d", "text": "Efetue e simplifique quando possível:<br><br><strong>20√16 ÷ 5√8 = ?</strong>", "options": ["4√2", "2√4", "4√8", "8√2"], "correct": 0, "explanation": "Separe coeficientes e radicais:<br>(20÷5) · √(16÷8) = 4 · √2 = <strong>4√2</strong>"}, {"id": "EC1e", "section": "🏠 Em Casa — Questão 1", "label": "Em Casa 1e", "text": "Efetue e simplifique quando possível:<br><br><strong>√4 ÷ √3 = ?</strong>", "options": ["2√3/3", "√(4/3)", "2/3", "√(2/3)"], "correct": 0, "explanation": "√4 ÷ √3 = 2/√3<br>Racionalizando: 2/√3 · √3/√3 = <strong>2√3/3</strong>"}, {"id": "EC1m", "section": "🏠 Em Casa — Questão 1", "label": "Em Casa 1m", "text": "Efetue e simplifique quando possível:<br><br><strong>√(2/5) · √(3/5) = ?</strong>", "options": ["√6/5", "√6/25", "√(6/5)", "√6/10"], "correct": 0, "explanation": "√(2/5) · √(3/5) = √(2/5 · 3/5) = √(6/25) = √6/√25 = <strong>√6/5</strong>"}, {"id": "EC1n", "section": "🏠 Em Casa — Questão 1", "label": "Em Casa 1n", "text": "Efetue e simplifique quando possível:<br><br><strong>√0,8 · √0,2 = ?</strong>", "options": ["0,4", "0,16", "√1,6", "0,04"], "correct": 0, "explanation": "√0,8 · √0,2 = √(0,8 · 0,2) = √0,16 = <strong>0,4</strong>"}, {"id": "EC1p", "section": "🏠 Em Casa — Questão 1", "label": "Em Casa 1p", "text": "Efetue e simplifique quando possível:<br><br><strong>√3 · √(3⁻⁷) = ?</strong>", "options": ["1/27", "3⁻³", "1/√3⁶", "Todas as anteriores são equivalentes"], "correct": 3, "explanation": "√3 · √(3⁻⁷) = √(3 · 3⁻⁷) = √(3⁻⁶) = 3⁻³ = 1/27<br>Todas as opções são equivalentes: <strong>1/27</strong>"}, {"id": "EC2a", "section": "🏠 Em Casa — Questão 2", "label": "Em Casa 2a", "text": "A área de um retângulo mede 3√35 cm² e um de seus lados mede √7 cm.<br>Determine a medida do <strong>outro lado</strong> desse retângulo.", "options": ["3√5 cm", "√5 cm", "3√28 cm", "√35 cm"], "correct": 0, "explanation": "Outro lado = Área ÷ lado<br>= 3√35 ÷ √7 = 3 · √(35/7) = 3 · √5 = <strong>3√5 cm</strong>"}, {"id": "EC2b", "section": "🏠 Em Casa — Questão 2", "label": "Em Casa 2b", "text": "Determine a <strong>área de um quadrado</strong> cujo lado mede 3√12 cm.", "options": ["108 cm²", "36√12 cm²", "12√3 cm²", "144 cm²"], "correct": 0, "explanation": "Área = lado²<br>= (3√12)² = 9 · 12 = <strong>108 cm²</strong>"}, {"id": "EC2c", "section": "🏠 Em Casa — Questão 2", "label": "Em Casa 2c", "text": "Determine a <strong>área de um triângulo retângulo isósceles</strong> cujos catetos medem √6 cm.", "options": ["3 cm²", "6 cm²", "√6 cm²", "3√6 cm²"], "correct": 0, "explanation": "Área = (base · altura)/2 = (√6 · √6)/2 = 6/2 = <strong>3 cm²</strong>"}, {"id": "EC2d", "section": "🏠 Em Casa — Questão 2", "label": "Em Casa 2d", "text": "A diagonal de um retângulo mede √7 cm e um de seus lados mede √5 cm.<br>Determine a <strong>área</strong> desse retângulo.", "options": ["√10 cm²", "√12 cm²", "√35 cm²", "2 cm²"], "correct": 0, "explanation": "Outro lado² = (√7)² − (√5)² = 7 − 5 = 2 → lado = √2<br>Área = √5 · √2 = <strong>√10 cm²</strong>"}, {"id": "EC3a", "section": "🏠 Em Casa — Questão 3", "label": "Em Casa 3a", "text": "Simplifique o radical:<br><br><strong>¹⁴√5⁸ = ?</strong>", "options": ["⁷√5⁴", "⁷√5²", "²√5", "5^(4/7)"], "correct": 0, "explanation": "¹⁴√5⁸ = 5^(8/14) = 5^(4/7) = <strong>⁷√5⁴</strong><br>(divide índice e expoente por 2)"}, {"id": "EC3b", "section": "🏠 Em Casa — Questão 3", "label": "Em Casa 3b", "text": "Simplifique o radical:<br><br><strong>⁹√7⁶ = ?</strong>", "options": ["³√7²", "⁹√7³", "⁷√7⁴", "⁶√7⁴"], "correct": 0, "explanation": "⁹√7⁶ = 7^(6/9) = 7^(2/3) = <strong>³√7²</strong><br>(divide índice e expoente por 3)"}, {"id": "EC3g", "section": "🏠 Em Casa — Questão 3", "label": "Em Casa 3g", "text": "Simplifique o radical:<br><br><strong>√48 = ?</strong>", "options": ["4√3", "2√12", "6√2", "3√4"], "correct": 0, "explanation": "48 = 16 · 3<br>√48 = √(16 · 3) = 4√3 → <strong>4√3</strong>"}, {"id": "EC3h", "section": "🏠 Em Casa — Questão 3", "label": "Em Casa 3h", "text": "Simplifique o radical:<br><br><strong>√72 = ?</strong>", "options": ["6√2", "4√3", "3√8", "8√3"], "correct": 0, "explanation": "72 = 36 · 2<br>√72 = √(36 · 2) = <strong>6√2</strong>"}, {"id": "EC3i", "section": "🏠 Em Casa — Questão 3", "label": "Em Casa 3i", "text": "Simplifique o radical:<br><br><strong>√200 = ?</strong>", "options": ["10√2", "2√50", "20√5", "5√8"], "correct": 0, "explanation": "200 = 100 · 2<br>√200 = √(100 · 2) = <strong>10√2</strong>"}, {"id": "EC3j", "section": "🏠 Em Casa — Questão 3", "label": "Em Casa 3j", "text": "Simplifique o radical:<br><br><strong>√384 = ?</strong>", "options": ["8√6", "4√24", "6√8", "12√2"], "correct": 0, "explanation": "384 = 64 · 6<br>√384 = √(64 · 6) = <strong>8√6</strong>"}, {"id": "EC3k", "section": "🏠 Em Casa — Questão 3", "label": "Em Casa 3k", "text": "Simplifique o radical:<br><br><strong>√500 = ?</strong>", "options": ["10√5", "5√20", "25√2", "2√125"], "correct": 0, "explanation": "500 = 100 · 5<br>√500 = √(100 · 5) = <strong>10√5</strong>"}, {"id": "EC3l", "section": "🏠 Em Casa — Questão 3", "label": "Em Casa 3l", "text": "Simplifique o radical:<br><br><strong>⁴√16 = ?</strong>", "options": ["2", "4", "√4", "⁴√2"], "correct": 0, "explanation": "16 = 2⁴<br>⁴√2⁴ = <strong>2</strong> (raiz exata)"}, {"id": "EC4a", "section": "🏠 Em Casa — Questão 4", "label": "Em Casa 4a", "text": "Determine a raiz exata:<br><br><strong>³√1728 = ?</strong>", "options": ["12", "14", "10", "18"], "correct": 0, "explanation": "12³ = 12 · 12 · 12 = 1728<br>³√1728 = <strong>12</strong>"}, {"id": "EC4b", "section": "🏠 Em Casa — Questão 4", "label": "Em Casa 4b", "text": "Determine a raiz exata:<br><br><strong>¹⁰√1024 = ?</strong>", "options": ["2", "4", "10", "√10"], "correct": 0, "explanation": "1024 = 2¹⁰<br>¹⁰√2¹⁰ = <strong>2</strong>"}, {"id": "EC4e", "section": "🏠 Em Casa — Questão 4", "label": "Em Casa 4e", "text": "Determine a raiz exata:<br><br><strong>⁶√4096 = ?</strong>", "options": ["4", "8", "6", "2"], "correct": 0, "explanation": "4096 = 2¹²<br>⁶√2¹² = 2^(12/6) = 2² = <strong>4</strong>"}, {"id": "EC4f", "section": "🏠 Em Casa — Questão 4", "label": "Em Casa 4f", "text": "Determine a raiz exata:<br><br><strong>√324 = ?</strong>", "options": ["18", "16", "14", "24"], "correct": 0, "explanation": "18² = 324<br>√324 = <strong>18</strong>"}, {"id": "EC4g", "section": "🏠 Em Casa — Questão 4", "label": "Em Casa 4g", "text": "Determine a raiz exata:<br><br><strong>√576 = ?</strong>", "options": ["24", "18", "26", "22"], "correct": 0, "explanation": "24² = 576<br>√576 = <strong>24</strong>"}, {"id": "EC4h", "section": "🏠 Em Casa — Questão 4", "label": "Em Casa 4h", "text": "Determine a raiz exata:<br><br><strong>√(64/225) = ?</strong>", "options": ["8/15", "4/9", "8/25", "4/15"], "correct": 0, "explanation": "√64 = 8 e √225 = 15<br>√(64/225) = <strong>8/15</strong>"}, {"id": "EC5b", "section": "🏠 Em Casa — Questão 5", "label": "Em Casa 5b", "text": "Efetue e simplifique:<br><br><strong>(√4 · √20) / √5 = ?</strong>", "options": ["4", "2√5", "4√5", "√16"], "correct": 0, "explanation": "√4 = 2, então: (2 · √20)/√5 = 2 · √(20/5) = 2 · √4 = 2 · 2 = <strong>4</strong>"}, {"id": "EC5c", "section": "🏠 Em Casa — Questão 5", "label": "Em Casa 5c", "text": "Efetue e simplifique:<br><br><strong>3√3 · √27 = ?</strong>", "options": ["27", "9√3", "3√81", "81"], "correct": 0, "explanation": "√27 = 3√3<br>3√3 · 3√3 = 9 · 3 = <strong>27</strong>"}, {"id": "EC5f", "section": "🏠 Em Casa — Questão 5", "label": "Em Casa 5f", "text": "Efetue e simplifique:<br><br><strong>√(240/15) = ?</strong>", "options": ["4", "2√4", "8", "√16"], "correct": 0, "explanation": "240/15 = 16<br>√16 = <strong>4</strong>"}, {"id": "EC5g", "section": "🏠 Em Casa — Questão 5", "label": "Em Casa 5g", "text": "Efetue e simplifique:<br><br><strong>(√6 · √8) / √2 = ?</strong>", "options": ["2√6", "√48", "4√3", "√24"], "correct": 0, "explanation": "(√6 · √8)/√2 = √6 · √(8/2) = √6 · √4 = √6 · 2 = <strong>2√6</strong>"}, {"id": "Q6a", "section": "📗 Questão 6", "label": "Questão 6a", "text": "Simplifique o número a seguir:<br><br><strong>⁵√2592 = ?</strong>", "options": ["2·⁵√81", "3·⁵√32", "6·⁵√4", "⁵√2592 já simplificado"], "correct": 0, "explanation": "2592 = 2⁵ · 3⁴ = 32 · 81<br>⁵√(2⁵ · 3⁴) = 2 · ⁵√3⁴ = <strong>2·⁵√81</strong>"}, {"id": "Q6b", "section": "📗 Questão 6", "label": "Questão 6b", "text": "Simplifique o número a seguir:<br><br><strong>⁶√64 = ?</strong>", "options": ["2", "4", "8", "√8"], "correct": 0, "explanation": "64 = 2⁶<br>⁶√2⁶ = <strong>2</strong>"}, {"id": "Q6d", "section": "📗 Questão 6", "label": "Questão 6d", "text": "Simplifique o número a seguir:<br><br><strong>√4096 = ?</strong>", "options": ["64", "32", "48", "128"], "correct": 0, "explanation": "4096 = 2¹² = (2⁶)²<br>√(2¹²) = 2⁶ = <strong>64</strong>"}, {"id": "Q6e", "section": "📗 Questão 6", "label": "Questão 6e", "text": "Simplifique o número a seguir:<br><br><strong>¹²√(2⁶ · 3³) = ?</strong>", "options": ["⁴√12", "⁶√6", "√6", "⁴√6"], "correct": 0, "explanation": "¹²√(2⁶ · 3³) = 2^(6/12) · 3^(3/12) = 2^(1/2) · 3^(1/4) = ⁴√(2² · 3) = <strong>⁴√12</strong>"}, {"id": "Q7a", "section": "📗 Questão 7", "label": "Questão 7a", "text": "Efetue a multiplicação e simplifique:<br><br><strong>√6 · √15 = ?</strong>", "options": ["3√10", "√90", "9√10", "6√5"], "correct": 0, "explanation": "√6 · √15 = √90 = √(9·10) = <strong>3√10</strong>"}, {"id": "Q7b", "section": "📗 Questão 7", "label": "Questão 7b", "text": "Efetue a multiplicação e simplifique:<br><br><strong>³√4 · ³√6 = ?</strong>", "options": ["2·³√3", "³√24", "³√10", "2·³√6"], "correct": 0, "explanation": "³√4 · ³√6 = ³√24 = ³√(8·3) = <strong>2·³√3</strong>"}, {"id": "Q7c", "section": "📗 Questão 7", "label": "Questão 7c", "text": "Efetue a multiplicação e simplifique:<br><br><strong>⁵√6² · √6 = ?</strong>", "options": ["¹⁰√6⁹", "⁵√6³", "6·⁵√6", "¹⁰√36"], "correct": 0, "explanation": "6^(2/5) · 6^(1/2) = 6^(2/5 + 1/2) = 6^(4/10 + 5/10) = 6^(9/10) = <strong>¹⁰√6⁹</strong>"}, {"id": "Q7d", "section": "📗 Questão 7", "label": "Questão 7d", "text": "Efetue a multiplicação e simplifique:<br><br><strong>⁵√9 · √3 = ?</strong>", "options": ["¹⁰√3⁹", "⁵√27", "³√9", "¹⁰√9⁴"], "correct": 0, "explanation": "9 = 3², então: (3²)^(1/5) · 3^(1/2) = 3^(2/5) · 3^(1/2) = 3^(4/10 + 5/10) = 3^(9/10) = <strong>¹⁰√3⁹</strong>"}, {"id": "Q8a", "section": "📗 Questão 8", "label": "Questão 8a", "text": "Determine a potência, simplificando o resultado:<br><br><strong>(√7)⁶ = ?</strong>", "options": ["343", "49", "7³", "7√7"], "correct": 0, "explanation": "(√7)⁶ = (7^(1/2))⁶ = 7^(6/2) = 7³ = <strong>343</strong>"}, {"id": "Q8b", "section": "📗 Questão 8", "label": "Questão 8b", "text": "Determine a potência, simplificando o resultado:<br><br><strong>(2 · ⁴√5²)⁴ = ?</strong>", "options": ["400", "100", "80", "200"], "correct": 0, "explanation": "(2 · 5^(2/4))⁴ = 2⁴ · (5^(1/2))⁴ = 16 · 5² = 16 · 25 = <strong>400</strong>"}, {"id": "Q9a", "section": "📗 Questão 9", "label": "Questão 9a", "text": "Reduza a um único radical:<br><br><strong>√√208 = ?</strong>", "options": ["2·⁴√13", "⁴√208", "√√208", "⁴√16·√13"], "correct": 0, "explanation": "√√208 = (208^(1/2))^(1/2) = 208^(1/4) = ⁴√208<br>208 = 2⁴·13 → ⁴√(2⁴·13) = <strong>2·⁴√13</strong>"}, {"id": "Q9b", "section": "📗 Questão 9", "label": "Questão 9b", "text": "Reduza a um único radical:<br><br><strong>³√(⁶√6³) = ?</strong>", "options": ["⁶√6", "³√6", "⁹√6", "√6"], "correct": 0, "explanation": "⁶√6³ = 6^(3/6) = 6^(1/2)<br>³√(6^(1/2)) = 6^(1/6) = <strong>⁶√6</strong>"}, {"id": "Q9c", "section": "📗 Questão 9", "label": "Questão 9c", "text": "Reduza a um único radical:<br><br><strong>⁴√(⁵√(2/3)¹⁰) = ?</strong>", "options": ["√(2/3)", "⁴√(2/3)", "√6/3", "⁴√(4/9)"], "correct": 0, "explanation": "⁵√(2/3)¹⁰ = (2/3)^(10/5) = (2/3)²<br>⁴√((2/3)²) = (2/3)^(2/4) = (2/3)^(1/2) = <strong>√(2/3)</strong>"}, {"id": "Q10a", "section": "📗 Questão 10", "label": "Questão 10a", "text": "Dado um cubo de volume 216 cm³, determine:<br><br><strong>a medida de sua aresta</strong>", "options": ["6 cm", "8 cm", "12 cm", "4 cm"], "correct": 0, "explanation": "V = a³ → a = ³√V = ³√216<br>6³ = 216 → <strong>a = 6 cm</strong>"}, {"id": "Q10b", "section": "📗 Questão 10", "label": "Questão 10b", "text": "Dado um cubo de aresta 6 cm, determine:<br><br><strong>a medida da área total de sua superfície</strong>", "options": ["216 cm²", "36 cm²", "108 cm²", "72 cm²"], "correct": 0, "explanation": "Área total = 6 · a² = 6 · 6² = 6 · 36 = <strong>216 cm²</strong>"}, {"id": "Q11a", "section": "📗 Questão 11", "label": "Questão 11a", "text": "O perímetro de um triângulo equilátero mede 36 cm. Determine:<br><br><strong>a medida de seu lado</strong>", "options": ["12 cm", "9 cm", "18 cm", "6 cm"], "correct": 0, "explanation": "Perímetro = 3 · lado<br>36 = 3 · lado → <strong>lado = 12 cm</strong>"}, {"id": "Q11b", "section": "📗 Questão 11", "label": "Questão 11b", "text": "Triângulo equilátero com lado 12 cm. Determine:<br><br><strong>a medida de sua altura</strong>", "options": ["6√3 cm", "12√3 cm", "3√3 cm", "4√3 cm"], "correct": 0, "explanation": "h = (l · √3)/2 = (12 · √3)/2 = <strong>6√3 cm</strong>"}, {"id": "Q11c", "section": "📗 Questão 11", "label": "Questão 11c", "text": "Triângulo equilátero com lado 12 cm e altura 6√3 cm. Determine:<br><br><strong>a medida de sua área</strong>", "options": ["36√3 cm²", "72√3 cm²", "18√3 cm²", "12√3 cm²"], "correct": 0, "explanation": "A = (base · altura)/2 = (12 · 6√3)/2 = <strong>36√3 cm²</strong>"}, {"id": "Q12", "section": "📗 Questão 12", "label": "Questão 12", "text": "Que distância, aproximadamente, uma pessoa economizará atravessando <strong>diagonalmente</strong> um parque quadrado de 2 km de lado, em vez de contornar o parque pelos lados?", "options": ["≈ 1,17 km", "≈ 0,83 km", "≈ 2,83 km", "≈ 1,50 km"], "correct": 0, "explanation": "Diagonal = 2√2 ≈ 2,83 km<br>Caminho pelos lados = 2 + 2 = 4 km<br>Economia = 4 − 2√2 ≈ 4 − 2,83 ≈ <strong>1,17 km</strong>"}];
+
+let cur = 0, answers = {}, streak = 0, maxStreak = 0, errors = 0;
+const LETTERS = ['A','B','C','D','E'];
+
+function render() {
+  const q = QUESTIONS[cur];
+  const total = QUESTIONS.length;
+
+  // progress
+  document.getElementById('progress-bar').style.width = (cur/total*100)+'%';
+  document.getElementById('counter').textContent = (cur+1)+' / '+total;
+  document.getElementById('section-label').textContent = q.section || '';
+  document.getElementById('question-label').textContent = q.label || '';
+  document.getElementById('question-text').innerHTML = q.text;
+
+  // SVG
+  const svgCont = document.getElementById('svg-container');
+  if (q.svg) {
+    svgCont.innerHTML = '<div class="svg-wrap">'+q.svg+'</div>';
+  } else {
+    svgCont.innerHTML = '';
+  }
+
+  // options
+  const opts = document.getElementById('options-container');
+  opts.innerHTML = '';
+  const answered = answers[cur] !== undefined;
+
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'opt';
+    if (answered) {
+      btn.disabled = true;
+      if (i === q.correct) btn.classList.add('correct');
+      else if (i === answers[cur]) btn.classList.add('wrong');
+    }
+    btn.innerHTML = `<span class="letter">${LETTERS[i]}</span><span>${opt}</span>`;
+    btn.onclick = () => answer(i);
+    opts.appendChild(btn);
+  });
+
+  // feedback
+  const fb = document.getElementById('feedback');
+  if (answered) {
+    fb.className = 'show ' + (answers[cur] === q.correct ? 'ok' : 'err');
+    document.getElementById('feedback-icon').textContent = answers[cur] === q.correct ? '✅' : '❌';
+    document.getElementById('feedback-text').innerHTML = q.explanation;
+    document.getElementById('btn-next').disabled = false;
+  } else {
+    fb.className = '';
+    document.getElementById('btn-next').disabled = true;
+  }
+
+  // streak badge
+  const badge = document.getElementById('streak-badge');
+  badge.innerHTML = streak >= 2 ? `<span>${streakLabel(streak)}</span>` : '';
+
+  // back button
+  document.getElementById('btn-back').disabled = cur === 0;
+}
+
+function streakLabel(n) {
+  if (n >= 8) return n + ' seguidas! 💥 Lendário!';
+  if (n >= 5) return n + ' seguidas! 🔥🔥 Hat-trick!';
+  return n + ' seguidas! 🔥';
+}
+
+function answer(i) {
+  if (answers[cur] !== undefined) return;
+  const q = QUESTIONS[cur];
+  answers[cur] = i;
+  if (i === q.correct) {
+    streak++;
+    if (streak > maxStreak) maxStreak = streak;
+  } else {
+    streak = 0;
+    errors++;
+  }
+  render();
+}
+
+function goNext() {
+  if (cur < QUESTIONS.length - 1) {
+    cur++;
+    render();
+    window.scrollTo(0,0);
+  } else {
+    showFinal();
+  }
+}
+
+function goBack() {
+  if (cur > 0) {
+    cur--;
+    // restore streak state (approximate — reset to 0 on back)
+    streak = 0;
+    render();
+    window.scrollTo(0,0);
+  }
+}
+
+function showFinal() {
+  document.getElementById('q-card').style.display = 'none';
+  document.getElementById('feedback').style.display = 'none';
+  document.getElementById('nav').style.display = 'none';
+  document.getElementById('streak-badge').style.display = 'none';
+  document.getElementById('section-label').style.display = 'none';
+  document.getElementById('progress-bar').style.width = '100%';
+
+  const total = QUESTIONS.length;
+  const correct = Object.values(answers).filter((a,i) => a === QUESTIONS[i]?.correct).length;
+  // recount properly
+  let c = 0;
+  for (let k in answers) { if (answers[k] === QUESTIONS[k].correct) c++; }
+  const pct = Math.round(c / total * 100);
+
+  document.getElementById('stat-pct').textContent = pct + '%';
+  document.getElementById('stat-streak').textContent = maxStreak + ' 🔥';
+  document.getElementById('stat-errors').textContent = errors;
+
+  let medal, title, sub;
+  if (pct === 100) { medal='🏆'; title='Perfeito!'; sub='Nota 100! Você dominou os irracionais!'; }
+  else if (pct >= 90) { medal='🥇'; title='Medalha de Ouro!'; sub='Excelente! Quase perfeito!'; }
+  else if (pct >= 70) { medal='🥈'; title='Medalha de Prata!'; sub='Muito bem! Continue praticando!'; }
+  else if (pct >= 50) { medal='🥉'; title='Medalha de Bronze!'; sub='Bom começo! Revise e tente novamente.'; }
+  else { medal='📚'; title='Continue Estudando!'; sub='Revise o módulo e tente de novo!'; }
+
+  document.getElementById('medal').textContent = medal;
+  document.getElementById('final-title').textContent = title;
+  document.getElementById('final-sub').textContent = `${c} de ${total} questões corretas (${pct}%). ${sub}`;
+
+  const final = document.getElementById('final');
+  final.style.display = 'block';
+
+  if (pct >= 70) launchConfetti();
+}
+
+function replay() {
+  cur = 0; answers = {}; streak = 0; maxStreak = 0; errors = 0;
+  document.getElementById('q-card').style.display = '';
+  document.getElementById('feedback').style.display = '';
+  document.getElementById('nav').style.display = '';
+  document.getElementById('streak-badge').style.display = '';
+  document.getElementById('section-label').style.display = '';
+  document.getElementById('final').style.display = 'none';
+  render();
+  window.scrollTo(0,0);
+}
+
+// CONFETTI
+function launchConfetti() {
+  const canvas = document.getElementById('confetti-canvas');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const ctx = canvas.getContext('2d');
+  const colors = ['#00e5ff','#39ff14','#ffea00','#ff1744','#ffffff'];
+  const particles = Array.from({length:140}, () => ({
+    x: Math.random()*canvas.width,
+    y: Math.random()*-canvas.height,
+    r: Math.random()*6+3,
+    c: colors[Math.floor(Math.random()*colors.length)],
+    vx: (Math.random()-.5)*3,
+    vy: Math.random()*4+2,
+    alpha: 1
+  }));
+  let frame = 0;
+  function draw() {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    particles.forEach(p => {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, 2*Math.PI);
+      ctx.fillStyle = p.c;
+      ctx.globalAlpha = p.alpha;
+      ctx.fill();
+      p.x += p.vx; p.y += p.vy;
+      if (p.y > canvas.height) { p.y = -10; p.x = Math.random()*canvas.width; }
+      if (frame > 120) p.alpha -= .008;
+    });
+    ctx.globalAlpha = 1;
+    frame++;
+    if (frame < 220) requestAnimationFrame(draw);
+    else ctx.clearRect(0,0,canvas.width,canvas.height);
+  }
+  draw();
+}
+
+render();
+</script>
+</body>
+</html>
