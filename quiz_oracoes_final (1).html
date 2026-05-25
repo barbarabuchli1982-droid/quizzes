@@ -1,0 +1,95 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz de Orações</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+body{background:#0f172a;color:white;font-family:Arial;padding:20px}
+.card{max-width:900px;margin:auto;background:#1e293b;padding:30px;border-radius:20px}
+.option,.nav-btn{display:block;width:100%;padding:14px;margin-top:10px;border-radius:12px;border:1px solid #475569;background:#0f172a;color:white;cursor:pointer}
+.correct{background:#14532d !important}
+.wrong{background:#7f1d1d !important}
+</style>
+</head>
+<body>
+<div class="card">
+<h1 class="text-4xl font-bold mb-6">🧠 Quiz de Orações</h1>
+<div id="counter" class="mb-4 text-cyan-300"></div>
+<div id="quiz"></div>
+<div class="flex justify-between mt-6">
+<button onclick="prevQuestion()" class="nav-btn w-40">⬅ Voltar</button>
+<button onclick="nextQuestion()" class="nav-btn w-40">Próxima ➜</button>
+</div>
+</div>
+
+<script>
+const questions = [{"sentence": "Estudamos bastante, mas não conseguimos boas notas.", "ask": "A conjunção/locução conjuntiva no período é:", "options": ["bastante", "mas", "não", "conseguimos", "notas"], "answer": "mas"}, {"sentence": "Estudamos bastante, mas não conseguimos boas notas.", "ask": "Classifique a oração:", "options": ["C", "SS"], "answer": "C"}, {"sentence": "O aluno se esforçou, portanto merece ser aprovado.", "ask": "A conjunção/locução conjuntiva no período é:", "options": ["aluno", "esforçou", "portanto", "merece", "aprovado"], "answer": "portanto"}, {"sentence": "O aluno se esforçou, portanto merece ser aprovado.", "ask": "Classifique a oração:", "options": ["C", "SS"], "answer": "C"}, {"sentence": "É necessário que você entregue o relatório hoje.", "ask": "A conjunção/locução conjuntiva no período é:", "options": ["necessário", "que", "você", "entregue", "relatório"], "answer": "que"}, {"sentence": "É necessário que você entregue o relatório hoje.", "ask": "Classifique a oração:", "options": ["C", "SS"], "answer": "SS"}, {"sentence": "Não só treinou bastante, como também se destacou no jogo.", "ask": "A conjunção/locução conjuntiva no período é:", "options": ["treinou", "bastante", "como também", "destacou", "jogo"], "answer": "como também"}, {"sentence": "Não só treinou bastante, como também se destacou no jogo.", "ask": "Classifique a oração:", "options": ["C", "SS"], "answer": "C"}, {"sentence": "Que ele minta constantemente não nos surpreende mais.", "ask": "A conjunção/locução conjuntiva no período é:", "options": ["que", "minta", "constantemente", "surpreende", "mais"], "answer": "que"}, {"sentence": "Que ele minta constantemente não nos surpreende mais.", "ask": "Classifique a oração:", "options": ["C", "SS"], "answer": "SS"}, {"sentence": "Vamos sair agora, pois já estamos atrasados.", "ask": "A conjunção/locução conjuntiva no período é:", "options": ["vamos", "sair", "pois", "estamos", "atrasados"], "answer": "pois"}, {"sentence": "Vamos sair agora, pois já estamos atrasados.", "ask": "Classifique a oração:", "options": ["C", "SS"], "answer": "C"}, {"sentence": "Desejo que tudo dê certo para você.", "ask": "A conjunção/locução conjuntiva no período é:", "options": ["desejo", "que", "tudo", "dê", "certo"], "answer": "que"}, {"sentence": "Desejo que tudo dê certo para você.", "ask": "Classifique a oração:", "options": ["C", "SS"], "answer": "SS"}, {"sentence": "Estava cansado, contudo continuou trabalhando.", "ask": "A conjunção/locução conjuntiva no período é:", "options": ["estava", "cansado", "contudo", "continuou", "trabalhando"], "answer": "contudo"}, {"sentence": "Estava cansado, contudo continuou trabalhando.", "ask": "Classifique a oração:", "options": ["C", "SS"], "answer": "C"}, {"sentence": "Todos acreditam que ela será promovida.", "ask": "A conjunção/locução conjuntiva no período é:", "options": ["todos", "acreditam", "que", "ela", "será", "promovida"], "answer": "que"}, {"sentence": "Todos acreditam que ela será promovida.", "ask": "Classifique a oração:", "options": ["C", "SS"], "answer": "SS"}, {"sentence": "Pedro estuda muito e tira boas notas.", "ask": "Classifique a oração coordenada quanto ao tipo:", "options": ["aditiva", "adversativa", "alternativa", "explicativa", "conclusiva"], "answer": "aditiva"}, {"sentence": "Estava cansado, mas não desistiu do trabalho.", "ask": "Classifique a oração coordenada quanto ao tipo:", "options": ["aditiva", "adversativa", "alternativa", "explicativa", "conclusiva"], "answer": "adversativa"}, {"sentence": "Ou você estuda agora, ou será reprovado no fim do ano.", "ask": "Classifique a oração coordenada quanto ao tipo:", "options": ["aditiva", "adversativa", "alternativa", "explicativa", "conclusiva"], "answer": "alternativa"}, {"sentence": "Você se dedicou bastante, logo será recompensado.", "ask": "Classifique a oração coordenada quanto ao tipo:", "options": ["aditiva", "adversativa", "alternativa", "explicativa", "conclusiva"], "answer": "conclusiva"}, {"sentence": "Não só jogou bem, como também marcou dois gols.", "ask": "Classifique a oração coordenada quanto ao tipo:", "options": ["aditiva", "adversativa", "alternativa", "explicativa", "conclusiva"], "answer": "aditiva"}, {"sentence": "Estudou com determinação, portanto conseguiu a bolsa de estudos.", "ask": "Classifique a oração coordenada quanto ao tipo:", "options": ["aditiva", "adversativa", "alternativa", "explicativa", "conclusiva"], "answer": "conclusiva"}, {"sentence": "Conseguiu a bolsa de estudos porque estudou com determinação.", "ask": "Classifique a oração coordenada quanto ao tipo:", "options": ["aditiva", "adversativa", "alternativa", "explicativa", "conclusiva"], "answer": "explicativa"}, {"sentence": "É necessário que todos cheguem no horário.", "ask": "Classifique as orações subordinadas substantivas conforme o tipo:", "options": ["subjetiva", "objetiva direta", "objetiva indireta", "completiva nominal", "predicativa", "apositiva"], "answer": "subjetiva"}, {"sentence": "Desejo que você seja feliz.", "ask": "Classifique as orações subordinadas substantivas conforme o tipo:", "options": ["subjetiva", "objetiva direta", "objetiva indireta", "completiva nominal", "predicativa", "apositiva"], "answer": "objetiva direta"}, {"sentence": "Tenho esperança de que ele volte logo.", "ask": "Classifique as orações subordinadas substantivas conforme o tipo:", "options": ["subjetiva", "objetiva direta", "objetiva indireta", "completiva nominal", "predicativa", "apositiva"], "answer": "completiva nominal"}, {"sentence": "A verdade é que ninguém sabe a resposta.", "ask": "Classifique as orações subordinadas substantivas conforme o tipo:", "options": ["subjetiva", "objetiva direta", "objetiva indireta", "completiva nominal", "predicativa", "apositiva"], "answer": "predicativa"}, {"sentence": "Ele precisava de que o ajudassem com o trabalho.", "ask": "Classifique as orações subordinadas substantivas conforme o tipo:", "options": ["subjetiva", "objetiva direta", "objetiva indireta", "completiva nominal", "predicativa", "apositiva"], "answer": "objetiva indireta"}, {"sentence": "O importante é que estamos juntos.", "ask": "Classifique as orações subordinadas substantivas conforme o tipo:", "options": ["subjetiva", "objetiva direta", "objetiva indireta", "completiva nominal", "predicativa", "apositiva"], "answer": "predicativa"}, {"sentence": "Todos sabiam que ela não queria sair.", "ask": "Classifique as orações subordinadas substantivas conforme o tipo:", "options": ["subjetiva", "objetiva direta", "objetiva indireta", "completiva nominal", "predicativa", "apositiva"], "answer": "objetiva direta"}, {"sentence": "Pedi que não comentassem sobre o assunto.", "ask": "Classifique as orações subordinadas substantivas conforme o tipo:", "options": ["subjetiva", "objetiva direta", "objetiva indireta", "completiva nominal", "predicativa", "apositiva"], "answer": "objetiva direta"}, {"sentence": "Meu desejo: que possamos nos reencontrar em breve.", "ask": "Classifique as orações subordinadas substantivas conforme o tipo:", "options": ["subjetiva", "objetiva direta", "objetiva indireta", "completiva nominal", "predicativa", "apositiva"], "answer": "apositiva"}, {"sentence": "Convém que você chegue cedo ao aeroporto.", "ask": "Classifique as orações subordinadas substantivas conforme o tipo:", "options": ["subjetiva", "objetiva direta", "objetiva indireta", "completiva nominal", "predicativa", "apositiva"], "answer": "subjetiva"}, {"sentence": "É essencial que todos participem do projeto.", "ask": "Classifique a oração:", "options": ["C", "SS"], "answer": "SS"}, {"sentence": "É essencial que todos participem do projeto.", "ask": "Classifique as orações subordinadas substantivas conforme o tipo:", "options": ["subjetiva", "objetiva direta", "objetiva indireta", "completiva nominal", "predicativa", "apositiva"], "answer": "subjetiva"}, {"sentence": "O problema é que ele não aceita críticas.", "ask": "Classifique a oração:", "options": ["C", "SS"], "answer": "SS"}, {"sentence": "O problema é que ele não aceita críticas.", "ask": "Classifique as orações subordinadas substantivas conforme o tipo:", "options": ["subjetiva", "objetiva direta", "objetiva indireta", "completiva nominal", "predicativa", "apositiva"], "answer": "predicativa"}, {"sentence": "Sentimos necessidade de que o ambiente seja mais acolhedor.", "ask": "Classifique a oração:", "options": ["C", "SS"], "answer": "SS"}, {"sentence": "Sentimos necessidade de que o ambiente seja mais acolhedor.", "ask": "Classifique as orações subordinadas substantivas conforme o tipo:", "options": ["subjetiva", "objetiva direta", "objetiva indireta", "completiva nominal", "predicativa", "apositiva"], "answer": "completiva nominal"}, {"sentence": "A chuva parou, o céu clareou, as crianças saíram para brincar.", "ask": "Classifique a oração:", "options": ["C", "SS"], "answer": "C"}, {"sentence": "A chuva parou, o céu clareou, as crianças saíram para brincar.", "ask": "Classifique a oração coordenada quanto ao tipo:", "options": ["assindética", "aditiva", "adversativa", "alternativa", "explicativa", "conclusiva"], "answer": "assindética"}, {"sentence": "Ninguém duvidava de que ela estava dizendo a verdade.", "ask": "Classifique a oração:", "options": ["C", "SS"], "answer": "SS"}, {"sentence": "Ninguém duvidava de que ela estava dizendo a verdade.", "ask": "Classifique as orações subordinadas substantivas conforme o tipo:", "options": ["subjetiva", "objetiva direta", "objetiva indireta", "completiva nominal", "predicativa", "apositiva"], "answer": "objetiva indireta"}, {"sentence": "O empresário afirmou que os lucros cresceram, mas a crise ainda preocupa.", "ask": "Classifique as orações:", "options": ["C / SS", "SS / C"], "answer": "SS / C"}, {"sentence": "O empresário afirmou que os lucros cresceram, mas a crise ainda preocupa.", "ask": "Classifique os tipos das orações:", "options": ["objetiva direta / adversativa", "objetiva direta / aditiva", "completiva nominal / aditiva", "subjetiva / explicativa"], "answer": "objetiva direta / adversativa"}, {"sentence": "Estava cansado, contudo permaneceu no local.", "ask": "Classifique a oração:", "options": ["C", "SS"], "answer": "C"}, {"sentence": "Estava cansado, contudo permaneceu no local.", "ask": "Classifique a oração coordenada quanto ao tipo:", "options": ["assindética", "aditiva", "adversativa", "alternativa", "explicativa", "conclusiva"], "answer": "adversativa"}, {"sentence": "Meu desejo: que tudo termine bem.", "ask": "Classifique a oração:", "options": ["C", "SS"], "answer": "SS"}, {"sentence": "Meu desejo: que tudo termine bem.", "ask": "Classifique as orações subordinadas substantivas conforme o tipo:", "options": ["subjetiva", "objetiva direta", "objetiva indireta", "completiva nominal", "predicativa", "apositiva"], "answer": "apositiva"}, {"sentence": "Precisamos de que os relatórios sejam entregues hoje.", "ask": "Classifique a oração:", "options": ["C", "SS"], "answer": "SS"}, {"sentence": "Precisamos de que os relatórios sejam entregues hoje.", "ask": "Classifique as orações subordinadas substantivas conforme o tipo:", "options": ["subjetiva", "objetiva direta", "objetiva indireta", "completiva nominal", "predicativa", "apositiva"], "answer": "objetiva indireta"}, {"sentence": "É bom que vocês tenham se inscrito no curso.", "ask": "Classifique a oração:", "options": ["C", "SS"], "answer": "SS"}, {"sentence": "É bom que vocês tenham se inscrito no curso.", "ask": "Classifique as orações subordinadas substantivas conforme o tipo:", "options": ["subjetiva", "objetiva direta", "objetiva indireta", "completiva nominal", "predicativa", "apositiva"], "answer": "subjetiva"}, {"sentence": "Tinha certeza de que havia feito o melhor possível.", "ask": "Classifique a oração:", "options": ["C", "SS"], "answer": "SS"}, {"sentence": "Tinha certeza de que havia feito o melhor possível.", "ask": "Classifique as orações subordinadas substantivas conforme o tipo:", "options": ["subjetiva", "objetiva direta", "objetiva indireta", "completiva nominal", "predicativa", "apositiva"], "answer": "completiva nominal"}, {"sentence": "O técnico ordenou que os jogadores entrassem e que mantivessem o foco.", "ask": "Classifique as orações:", "options": ["C / SS", "SS / C"], "answer": "SS / C"}, {"sentence": "O técnico ordenou que os jogadores entrassem e que mantivessem o foco.", "ask": "Classifique os tipos das orações:", "options": ["objetiva direta / aditiva", "objetiva direta / adversativa", "completiva nominal / aditiva", "subjetiva / explicativa"], "answer": "objetiva direta / aditiva"}, {"sentence": "Ele afirmou que não sabia do problema, contudo sua atitude foi suspeita.", "ask": "Classifique as orações:", "options": ["C / SS", "SS / C"], "answer": "SS / C"}, {"sentence": "Ele afirmou que não sabia do problema, contudo sua atitude foi suspeita.", "ask": "Classifique os tipos das orações:", "options": ["objetiva direta / adversativa", "objetiva direta / aditiva", "completiva nominal / aditiva", "subjetiva / explicativa"], "answer": "objetiva direta / adversativa"}, {"sentence": "Tenho certeza de que ela virá, e já preparei tudo para recebê-la.", "ask": "Classifique as orações:", "options": ["C / SS", "SS / C"], "answer": "SS / C"}, {"sentence": "Tenho certeza de que ela virá, e já preparei tudo para recebê-la.", "ask": "Classifique os tipos das orações:", "options": ["completiva nominal / aditiva", "objetiva direta / adversativa", "objetiva direta / aditiva", "subjetiva / explicativa"], "answer": "completiva nominal / aditiva"}, {"sentence": "Sabemos que a tarefa é difícil, mas estamos dispostos a tentar.", "ask": "Classifique as orações:", "options": ["C / SS", "SS / C"], "answer": "SS / C"}, {"sentence": "Sabemos que a tarefa é difícil, mas estamos dispostos a tentar.", "ask": "Classifique os tipos das orações:", "options": ["objetiva direta / adversativa", "objetiva direta / aditiva", "completiva nominal / aditiva", "subjetiva / explicativa"], "answer": "objetiva direta / adversativa"}, {"sentence": "Chegamos ao estádio, os portões estavam fechados, a multidão protestava.", "ask": "Classifique a oração:", "options": ["C", "SS"], "answer": "C"}, {"sentence": "Chegamos ao estádio, os portões estavam fechados, a multidão protestava.", "ask": "Classifique a oração coordenada quanto ao tipo:", "options": ["assindética", "aditiva", "adversativa", "alternativa", "explicativa", "conclusiva"], "answer": "assindética"}];
+let current=0;
+let answers=new Array(questions.length).fill(null);
+
+function render(){
+const q=questions[current];
+document.getElementById('counter').innerText=`${current+1} / ${questions.length}`;
+
+document.getElementById('quiz').innerHTML=`
+<h2 class="text-2xl font-bold mb-4">"${q.sentence}"</h2>
+<p class="mb-5">${q.ask}</p>
+
+${q.options.map((o,i)=>`
+<button class="option" onclick="answer(${i})">
+${o}
+</button>`).join('')}
+
+<div id="feedback" class="mt-4 font-bold"></div>
+`;
+
+if(answers[current]!==null) restore();
+}
+
+function answer(i){
+if(answers[current]!==null) return;
+
+answers[current]=i;
+
+restore();
+}
+
+function restore(){
+const q=questions[current];
+const buttons=document.querySelectorAll('.option');
+const selected=answers[current];
+
+buttons.forEach((b,i)=>{
+b.disabled=true;
+if(q.options[i]===q.answer) b.classList.add('correct');
+});
+
+if(q.options[selected]===q.answer){
+document.getElementById('feedback').innerHTML='✅ Correto!';
+}else{
+buttons[selected].classList.add('wrong');
+document.getElementById('feedback').innerHTML='❌ Resposta: '+q.answer;
+}
+}
+
+function nextQuestion(){
+if(current<questions.length-1){
+current++;
+render();
+}
+}
+
+function prevQuestion(){
+if(current>0){
+current--;
+render();
+}
+}
+
+render();
+</script>
+</body>
+</html>
